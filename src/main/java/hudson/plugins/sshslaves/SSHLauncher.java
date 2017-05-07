@@ -801,7 +801,8 @@ public class SSHLauncher extends ComputerLauncher {
 				host = computer.getHostName();
 			} catch (IOException e) {}    			
     	} else {
-    		host = "1.1.1.1";
+    		//host = "1.1.1.1";
+    		return;
     	}
         connection = new Connection(host, port);
         ExecutorService executorService = Executors.newSingleThreadExecutor(
