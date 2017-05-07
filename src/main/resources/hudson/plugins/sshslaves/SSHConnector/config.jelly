@@ -29,7 +29,11 @@
       </f:entry>
 
       <f:entry title="${%Connection Timeout in Seconds}" field="launchTimeoutSeconds">
-          <f:textbox name="launchTimeoutSeconds" />
+          <f:textbox name="launchTimeoutSeconds" default="200" />
+      </f:entry>
+
+      <f:entry title="${%JNLP Connection Timeout in Seconds}" field="jnlpConnTimeoutSeconds">
+          <f:textbox name="jnlpConnTimeoutSeconds" default="200" />
       </f:entry>
 
       <f:entry title="${%Maximum Number of Retries}" field="maxNumRetries">

@@ -179,12 +179,16 @@ public class SSHLauncher extends ComputerLauncher {
     /**
      * Field host
      */
-    private final String host;
+    private String host;
 
-    /**
+    public void setHost(String host) {
+		this.host = host;
+	}
+
+	/**
      * Field port
      */
-    private final int port;
+    private int port;
 
     /**
      * The id of the credentials to use.
@@ -259,6 +263,11 @@ public class SSHLauncher extends ComputerLauncher {
     public final Integer launchTimeoutSeconds;
 
     /**
+     *  Field JNLP connection delay in seconds.
+     */
+    public final Integer jnlpConnTimeoutSeconds;
+    
+	/**
      * Field maxNumRetries.
      */
     public final Integer maxNumRetries;
@@ -293,7 +302,7 @@ public class SSHLauncher extends ComputerLauncher {
              String jvmOptions, String javaPath, String prefixStartSlaveCmd, String suffixStartSlaveCmd,
              Integer launchTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy) {
         this(host, port, lookupSystemCredentials(credentialsId), jvmOptions, javaPath, null, prefixStartSlaveCmd,
-             suffixStartSlaveCmd, launchTimeoutSeconds, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy);
+             suffixStartSlaveCmd, launchTimeoutSeconds, 0, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy);
     }
 
     /**
@@ -315,7 +324,7 @@ public class SSHLauncher extends ComputerLauncher {
              String jvmOptions, String javaPath, String prefixStartSlaveCmd, String suffixStartSlaveCmd,
              Integer launchTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime) {
         this(host, port, lookupSystemCredentials(credentialsId), jvmOptions, javaPath, null, prefixStartSlaveCmd,
-             suffixStartSlaveCmd, launchTimeoutSeconds, maxNumRetries, retryWaitTime, null);
+             suffixStartSlaveCmd, launchTimeoutSeconds, 0, maxNumRetries, retryWaitTime, null);
     }
 
     /** @deprecated Use {@link #SSHLauncher(String, int, String, String, String, String, String, Integer, Integer, Integer)} instead. */
@@ -450,6 +459,7 @@ public class SSHLauncher extends ComputerLauncher {
         this.prefixStartSlaveCmd = fixEmpty(prefixStartSlaveCmd);
         this.suffixStartSlaveCmd = fixEmpty(suffixStartSlaveCmd);
         this.launchTimeoutSeconds = null;
+        this.jnlpConnTimeoutSeconds = null;
         this.maxNumRetries = null;
         this.retryWaitTime = null;
         this.sshHostKeyVerificationStrategy = null;
@@ -495,7 +505,7 @@ public class SSHLauncher extends ComputerLauncher {
                                     String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime) {
 
 
-        this(host, port, credentials, jvmOptions, javaPath, jdkInstaller, prefixStartSlaveCmd, suffixStartSlaveCmd, launchTimeoutSeconds, maxNumRetries, retryWaitTime, null);
+        this(host, port, credentials, jvmOptions, javaPath, jdkInstaller, prefixStartSlaveCmd, suffixStartSlaveCmd, launchTimeoutSeconds, 0, maxNumRetries, retryWaitTime, null);
     }
 
 
@@ -516,7 +526,7 @@ public class SSHLauncher extends ComputerLauncher {
      */
     public SSHLauncher(String host, int port, StandardUsernameCredentials credentials, String jvmOptions,
                                     String javaPath, JDKInstaller jdkInstaller, String prefixStartSlaveCmd,
-                                    String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy) {
+                                    String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer jnlpConnTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy) {
 
         this.host = host;
         this.jvmOptions = fixEmpty(jvmOptions);
@@ -533,6 +543,7 @@ public class SSHLauncher extends ComputerLauncher {
         this.prefixStartSlaveCmd = fixEmpty(prefixStartSlaveCmd);
         this.suffixStartSlaveCmd = fixEmpty(suffixStartSlaveCmd);
         this.launchTimeoutSeconds = launchTimeoutSeconds == null || launchTimeoutSeconds <= 0 ? null : launchTimeoutSeconds;
+        this.jnlpConnTimeoutSeconds = jnlpConnTimeoutSeconds == null || jnlpConnTimeoutSeconds <= 0 ? null : jnlpConnTimeoutSeconds;
         this.maxNumRetries = maxNumRetries != null && maxNumRetries > 0 ? maxNumRetries : 0;
         this.retryWaitTime = retryWaitTime != null && retryWaitTime > 0 ? retryWaitTime : 0;
         this.sshHostKeyVerificationStrategy = sshHostKeyVerificationStrategy;
@@ -777,7 +788,21 @@ public class SSHLauncher extends ComputerLauncher {
      * {@inheritDoc}
      */
     @Override
-    public synchronized void launch(final SlaveComputer computer, final TaskListener listener) throws InterruptedException {
+    public synchronized void launch(final SlaveComputer computer, final TaskListener listener) throws InterruptedException { 
+		long currentTime = System.currentTimeMillis();
+		long currentDuration = currentTime;
+		while (currentDuration < this.getJnlpConnTimeoutMillis() && computer.getChannel()==null) {
+			Thread.sleep(2000);
+			currentDuration = System.currentTimeMillis() - currentTime;
+		}
+    	if (computer.getChannel()!=null) {    		
+			try {
+				if (computer.getHostName() != null)
+				host = computer.getHostName();
+			} catch (IOException e) {}    			
+    	} else {
+    		host = "1.1.1.1";
+    	}
         connection = new Connection(host, port);
         ExecutorService executorService = Executors.newSingleThreadExecutor(
                 new NamingThreadFactory(Executors.defaultThreadFactory(), "SSHLauncher.launch for '" + computer.getName() + "' node"));
@@ -786,7 +811,6 @@ public class SSHLauncher extends ComputerLauncher {
             public Boolean call() throws InterruptedException {
                 Boolean rval = Boolean.FALSE;
                 try {
-
                     openConnection(listener, computer);
 
                     verifyNoHeaderJunk(listener);
@@ -1055,6 +1079,8 @@ public class SSHLauncher extends ComputerLauncher {
 
         try {
             computer.setChannel(session.getStdout(), session.getStdin(), listener.getLogger(), null);
+        } catch (IllegalStateException e) {
+        	return;        	
         } catch (InterruptedException e) {
             session.close();
             throw new IOException(Messages.SSHLauncher_AbortedDuringConnectionOpen(), e);
@@ -1528,6 +1554,18 @@ public class SSHLauncher extends ComputerLauncher {
         return launchTimeoutSeconds == null ? 0L : TimeUnit.SECONDS.toMillis(launchTimeoutSeconds);
     }
 
+    /**
+     * Getter for property 'jnlpConnTimeoutSeconds'
+     *
+     * @return jnlpConnTimeoutSeconds
+     */
+    public Integer getJnlpConnTimeoutSeconds() {
+		return jnlpConnTimeoutSeconds;
+	}
+    
+    private long getJnlpConnTimeoutMillis() {
+        return jnlpConnTimeoutSeconds == null ? 0L : TimeUnit.SECONDS.toMillis(jnlpConnTimeoutSeconds);
+    }
     /**
      * Getter for property 'maxNumRetries'
      *
