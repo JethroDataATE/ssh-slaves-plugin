@@ -276,8 +276,18 @@ public class SSHLauncher extends ComputerLauncher {
      * Field retryWaitTime.
      */
     public final Integer retryWaitTime;
-
+    
     /**
+     *  Field disableSlavejarCopy.
+     */
+    public final boolean disableSlavejarCopy;
+    
+	/**
+     *  Field disable ssh slave starting.
+     */
+    public final boolean disableSlaveStartBySsh;
+
+	/**
      * The verifier to use for checking the SSH key presented by the host
      * responding to the connection
      */
@@ -300,9 +310,9 @@ public class SSHLauncher extends ComputerLauncher {
     @DataBoundConstructor
     public SSHLauncher(String host, int port, String credentialsId,
              String jvmOptions, String javaPath, String prefixStartSlaveCmd, String suffixStartSlaveCmd,
-             Integer launchTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy) {
+             Integer launchTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy, boolean disableSlavejarCopy, boolean disableSlaveStartBySsh) {
         this(host, port, lookupSystemCredentials(credentialsId), jvmOptions, javaPath, null, prefixStartSlaveCmd,
-             suffixStartSlaveCmd, launchTimeoutSeconds, 0, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy);
+             suffixStartSlaveCmd, launchTimeoutSeconds, 0, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy, disableSlavejarCopy, disableSlaveStartBySsh);
     }
 
     /**
@@ -324,7 +334,7 @@ public class SSHLauncher extends ComputerLauncher {
              String jvmOptions, String javaPath, String prefixStartSlaveCmd, String suffixStartSlaveCmd,
              Integer launchTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime) {
         this(host, port, lookupSystemCredentials(credentialsId), jvmOptions, javaPath, null, prefixStartSlaveCmd,
-             suffixStartSlaveCmd, launchTimeoutSeconds, 0, maxNumRetries, retryWaitTime, null);
+             suffixStartSlaveCmd);
     }
 
     /** @deprecated Use {@link #SSHLauncher(String, int, String, String, String, String, String, Integer, Integer, Integer)} instead. */
@@ -463,6 +473,8 @@ public class SSHLauncher extends ComputerLauncher {
         this.maxNumRetries = null;
         this.retryWaitTime = null;
         this.sshHostKeyVerificationStrategy = null;
+        this.disableSlavejarCopy = false;
+        this.disableSlaveStartBySsh = false;
     }
 
     /**
@@ -505,7 +517,7 @@ public class SSHLauncher extends ComputerLauncher {
                                     String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime) {
 
 
-        this(host, port, credentials, jvmOptions, javaPath, jdkInstaller, prefixStartSlaveCmd, suffixStartSlaveCmd, launchTimeoutSeconds, 0, maxNumRetries, retryWaitTime, null);
+        this(host, port, credentials, jvmOptions, javaPath, jdkInstaller, prefixStartSlaveCmd, suffixStartSlaveCmd, launchTimeoutSeconds, 0, maxNumRetries, retryWaitTime, null, false, false);
     }
 
 
@@ -526,7 +538,7 @@ public class SSHLauncher extends ComputerLauncher {
      */
     public SSHLauncher(String host, int port, StandardUsernameCredentials credentials, String jvmOptions,
                                     String javaPath, JDKInstaller jdkInstaller, String prefixStartSlaveCmd,
-                                    String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer jnlpConnTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy) {
+                                    String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer jnlpConnTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy, boolean disableSlavejarCopy, boolean disableSlaveStartBySsh) {
 
         this.host = host;
         this.jvmOptions = fixEmpty(jvmOptions);
@@ -547,6 +559,8 @@ public class SSHLauncher extends ComputerLauncher {
         this.maxNumRetries = maxNumRetries != null && maxNumRetries > 0 ? maxNumRetries : 0;
         this.retryWaitTime = retryWaitTime != null && retryWaitTime > 0 ? retryWaitTime : 0;
         this.sshHostKeyVerificationStrategy = sshHostKeyVerificationStrategy;
+        this.disableSlavejarCopy = disableSlavejarCopy;
+        this.disableSlaveStartBySsh = disableSlaveStartBySsh;
     }
 
     /** @deprecated Use {@link #SSHLauncher(String, int, StandardUsernameCredentials, String, String, JDKInstaller, String, String)} instead. */
@@ -790,7 +804,7 @@ public class SSHLauncher extends ComputerLauncher {
     @Override
     public synchronized void launch(final SlaveComputer computer, final TaskListener listener) throws InterruptedException { 
 		long currentTime = System.currentTimeMillis();
-		long currentDuration = currentTime;
+		long currentDuration = currentTime;		
 		while (currentDuration < this.getJnlpConnTimeoutMillis() && computer.getChannel()==null) {
 			Thread.sleep(2000);
 			currentDuration = System.currentTimeMillis() - currentTime;
@@ -798,7 +812,8 @@ public class SSHLauncher extends ComputerLauncher {
     	if (computer.getChannel()!=null) {    		
 			try {
 				if (computer.getHostName() != null)
-				host = computer.getHostName();
+					setHost(computer.getHostName());
+					listener.getLogger().println("setting SSH connection detected Host name : " + computer.getHostName());
 			} catch (IOException e) {}    			
     	} else {
     		//host = "1.1.1.1";
@@ -824,11 +839,14 @@ public class SSHLauncher extends ComputerLauncher {
                         listener.error("Cannot get the working directory for " + computer);
                         return Boolean.FALSE;
                     }
-                    copySlaveJar(listener, workingDirectory);
-
-                    startSlave(computer, listener, java, workingDirectory);
-
+                    if(!getDisableSlavejarCopy()) {
+                    	copySlaveJar(listener, workingDirectory);
+                    }
+                    if (!getDisableSlaveStartBySsh()) {
+                    	startSlave(computer, listener, java, workingDirectory);
+                    }
                     PluginImpl.register(connection);
+                    listener.getLogger().println("SSH connection was added to registered list :" + computer.getHostName());
                     rval = Boolean.TRUE;
                 } catch (RuntimeException e) {
                     e.printStackTrace(listener.error(Messages.SSHLauncher_UnexpectedError()));
@@ -1081,6 +1099,7 @@ public class SSHLauncher extends ComputerLauncher {
         try {
             computer.setChannel(session.getStdout(), session.getStdin(), listener.getLogger(), null);
         } catch (IllegalStateException e) {
+        	listener.getLogger().println("Channel was connected !");
         	return;        	
         } catch (InterruptedException e) {
             session.close();
@@ -1585,6 +1604,15 @@ public class SSHLauncher extends ComputerLauncher {
         return retryWaitTime;
     }
 
+    
+    public boolean getDisableSlaveStartBySsh() {
+		return disableSlaveStartBySsh;
+	}
+
+    public boolean getDisableSlavejarCopy() {
+		return disableSlavejarCopy;
+	}
+    
     @Extension
     public static class DescriptorImpl extends Descriptor<ComputerLauncher> {
 

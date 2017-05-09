@@ -150,6 +150,17 @@ public class SSHConnector extends ComputerConnector {
      */
     public final Integer retryWaitTime;
     
+    /**
+     *  Field disableSlavejarCopy.
+     */
+    public final boolean disableSlavejarCopy;
+    
+    /**
+     *  Field disable ssh slave starting.
+     */
+    public final boolean disableSlaveStartBySsh;
+    
+    
     private final SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy;
 
     public StandardUsernameCredentials getCredentials() {
@@ -191,15 +202,15 @@ public class SSHConnector extends ComputerConnector {
                         String prefixStartSlaveCmd, String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer jnlpConnTimeoutSeconds,
                         Integer maxNumRetries, Integer retryWaitTime) {
         this(port, SSHLauncher.lookupSystemCredentials(credentialsId), null, null, null, jvmOptions, javaPath, null,
-             prefixStartSlaveCmd, suffixStartSlaveCmd, launchTimeoutSeconds, jnlpConnTimeoutSeconds, maxNumRetries, null, null);
+             prefixStartSlaveCmd, suffixStartSlaveCmd, launchTimeoutSeconds, jnlpConnTimeoutSeconds, maxNumRetries);
     }
     
     @DataBoundConstructor
     public SSHConnector(int port, String credentialsId, String jvmOptions, String javaPath,
                         String prefixStartSlaveCmd, String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer jnlpConnTimeoutSeconds,
-                        Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy) {
+                        Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy, boolean disableSlavejarCopy, boolean disableSlaveStartBySsh) {
         this(port, SSHLauncher.lookupSystemCredentials(credentialsId), null, null, null, jvmOptions, javaPath, null,
-             prefixStartSlaveCmd, suffixStartSlaveCmd, launchTimeoutSeconds, jnlpConnTimeoutSeconds, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy);
+             prefixStartSlaveCmd, suffixStartSlaveCmd, launchTimeoutSeconds, jnlpConnTimeoutSeconds, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy, disableSlavejarCopy, disableSlaveStartBySsh);
     }
 
     /**
@@ -259,7 +270,7 @@ public class SSHConnector extends ComputerConnector {
                         String privatekey, String jvmOptions, String javaPath, JDKInstaller jdkInstaller,
                         String prefixStartSlaveCmd, String suffixStartSlaveCmd) {
         this(port, credentials, username, password, privatekey, jvmOptions, javaPath, jdkInstaller, prefixStartSlaveCmd,
-                suffixStartSlaveCmd, null, null, null);
+                suffixStartSlaveCmd, null, null, null, null, null, false, false);
     }
     /**
      * @see SSHLauncher#SSHLauncher(String, int, StandardUsernameCredentials, String, String, JDKInstaller, String,
@@ -271,17 +282,19 @@ public class SSHConnector extends ComputerConnector {
                         String prefixStartSlaveCmd, String suffixStartSlaveCmd, Integer launchTimeoutSeconds,
                         Integer maxNumRetries, Integer retryWaitTime) {
         this(port, credentials, username, password, privatekey, jvmOptions, javaPath, jdkInstaller, prefixStartSlaveCmd,
-                suffixStartSlaveCmd, null, null, null, null, null);
+                suffixStartSlaveCmd);
     }
         
     /**
+     * @param disableSlavejarCopy 
+     * @param disableSlaveStartBySsh 
      * @see SSHLauncher#SSHLauncher(String, int, StandardUsernameCredentials, String, String, JDKInstaller, String,
      * String)
      */
     public SSHConnector(int port, StandardUsernameCredentials credentials, String username, String password,
                         String privatekey, String jvmOptions, String javaPath, JDKInstaller jdkInstaller,
                         String prefixStartSlaveCmd, String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer jnlpConnTimeoutSeconds,
-                        Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy) {
+                        Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy, boolean disableSlavejarCopy, boolean disableSlaveStartBySsh) {
         this.jvmOptions = jvmOptions;
         this.port = port == 0 ? 22 : port;
         this.credentials = credentials;
@@ -298,12 +311,14 @@ public class SSHConnector extends ComputerConnector {
         this.maxNumRetries = maxNumRetries != null && maxNumRetries > 0 ? maxNumRetries : 0;
         this.retryWaitTime = retryWaitTime != null && retryWaitTime > 0 ? retryWaitTime : 0;
         this.sshHostKeyVerificationStrategy = sshHostKeyVerificationStrategy;
+        this.disableSlavejarCopy = disableSlavejarCopy;
+        this.disableSlaveStartBySsh = disableSlaveStartBySsh;
     }
 
     @Override
     public SSHLauncher launch(String host, TaskListener listener) throws IOException, InterruptedException {
         return new SSHLauncher(host, port, getCredentials(), jvmOptions, javaPath, jdkInstaller, prefixStartSlaveCmd,
-                suffixStartSlaveCmd, launchTimeoutSeconds, jnlpConnTimeoutSeconds, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy);
+                suffixStartSlaveCmd, launchTimeoutSeconds, jnlpConnTimeoutSeconds, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy, disableSlavejarCopy, disableSlaveStartBySsh);
     }
     
     public SshHostKeyVerificationStrategy getSshHostKeyVerificationStrategy() {

@@ -29,7 +29,7 @@
       </f:entry>
 
       <f:entry title="${%Connection Timeout in Seconds}" field="launchTimeoutSeconds">
-          <f:textbox name="launchTimeoutSeconds" default="200" />
+          <f:textbox name="launchTimeoutSeconds" default="120" />
       </f:entry>
 
       <f:entry title="${%JNLP Connection Timeout in Seconds}" field="jnlpConnTimeoutSeconds">
@@ -37,12 +37,20 @@
       </f:entry>
 
       <f:entry title="${%Maximum Number of Retries}" field="maxNumRetries">
-          <f:textbox name="maxNumRetries" />
+          <f:textbox name="maxNumRetries" default="2" />
       </f:entry>
 
       <f:entry title="${%Seconds To Wait Between Retries}" field="retryWaitTime">
-          <f:textbox name="retryWaitTime" />
+          <f:textbox name="retryWaitTime" default="5" />
       </f:entry>
-
+      
+ 	  <f:entry title="disable slave jar copy to station" field="disableSlavejarCopy">
+	      <f:checkbox />
+	  </f:entry>
+	 
+	  <f:entry title="disable start slave by SSH session" field="disableSlaveStartBySsh">
+	     <f:checkbox />
+	  </f:entry>
+             
   </f:advanced>
 </j:jelly>
