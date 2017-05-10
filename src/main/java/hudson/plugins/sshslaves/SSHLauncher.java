@@ -805,33 +805,18 @@ public class SSHLauncher extends ComputerLauncher {
     public synchronized void launch(final SlaveComputer computer, final TaskListener listener) throws InterruptedException { 
 		long currentTime = System.currentTimeMillis();
 		long currentDuration = currentTime;
-		boolean foundOnlineChannel = false;
-		boolean foundHostNameFromChannel = false;
-		while (currentDuration < this.getJnlpConnTimeoutMillis()) {
-			Thread.sleep(5000);
-	    	if (computer.getChannel() != null) {
-	    		foundOnlineChannel = true;
-				try {
-					if (computer.getHostName() != null) {
-						setHost(computer.getHostName());					    
-					    foundHostNameFromChannel = true;
-						listener.getLogger().println("setting SSH connection detected Host name : " + computer.getHostName());
-						break;
-					}
-				} catch (IOException e) {
-					listener.getLogger().println("Error getting host name from Channel even though its available");
-				} 
-	    	}			
+		while (currentDuration < this.getJnlpConnTimeoutMillis() && computer.getChannel() != null) {
+			Thread.sleep(2000);
 			currentDuration = System.currentTimeMillis() - currentTime;
 		}
-    	if (!foundOnlineChannel) {    		
-    		listener.getLogger().println("JNLP connection timeout finished without getting Channel " + getTimestamp());
-    		return;
-    	}
-    	if (!foundHostNameFromChannel) {    		
-    		listener.getLogger().println("Cannot fetch host name from channel even though its available");
-    		throw new InterruptedException();
-    	}
+		try {	
+			setHost(computer.getHostName());					    
+			listener.getLogger().println("setting SSH connection detected Host name : " + computer.getHostName());			
+		} catch (IOException e) {
+			listener.getLogger().println("Error getting host name from Channel even though its available " + getTimestamp());
+			throw new InterruptedException();
+		} 
+		
         connection = new Connection(host, port);
         ExecutorService executorService = Executors.newSingleThreadExecutor(
                 new NamingThreadFactory(Executors.defaultThreadFactory(), "SSHLauncher.launch for '" + computer.getName() + "' node"));
@@ -916,6 +901,7 @@ public class SSHLauncher extends ComputerLauncher {
         if (connection!=null) {
             connection.close();
             connection = null;
+            host = "";
             listener.getLogger().println(Messages.SSHLauncher_ConnectionClosed(getTimestamp()));
         }
     }
@@ -1410,6 +1396,15 @@ public class SSHLauncher extends ComputerLauncher {
                 }
                 session = null;
             }
+            
+            if (usingHeadLessJNLP) {
+            	try {
+            		listener.getLogger().println("Terminate JNLP slave channel");	
+					slaveComputer.getChannel().close();
+				} catch (IOException e) {
+					listener.getLogger().println("Unable to terminate JNLP slave channel");					
+				}
+            }
 
             Slave n = slaveComputer.getNode();
             if (n != null && !connectionLost && !usingHeadLessJNLP) {
@@ -1463,8 +1458,7 @@ public class SSHLauncher extends ComputerLauncher {
                 }
             }
             PluginImpl.unregister(connection);
-            cleanupConnection(listener);
-            
+            cleanupConnection(listener);            
         }
     }
 
