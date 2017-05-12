@@ -137,6 +137,7 @@ import hudson.security.AccessControlled;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import static java.util.logging.Level.*;
+import hudson.remoting.Launcher;
 
 /**
  * A computer launcher that tries to start a linux slave by opening an SSH connection and trying to find java.
@@ -179,16 +180,27 @@ public class SSHLauncher extends ComputerLauncher {
     /**
      * Field host
      */
-    private String host;
+    private final String host;
 
-    public void setHost(String host) {
-		this.host = host;
+    /**
+     * Field host
+     */
+    private String detectedHost = "1.1.1.1";
+    
+	public String getDetectedHost() {
+		return detectedHost;
+	}
+
+	private void setDetectedHost(final SlaveComputer computer) throws IOException, InterruptedException {		
+		if (computer.getHostName() != null) {
+			this.detectedHost = computer.getHostName();
+		}	
 	}
 
 	/**
      * Field port
      */
-    private int port;
+    private final int port;
 
     /**
      * The id of the credentials to use.
@@ -804,13 +816,13 @@ public class SSHLauncher extends ComputerLauncher {
     @Override
     public synchronized void launch(final SlaveComputer computer, final TaskListener listener) throws InterruptedException { 
 		long currentTime = System.currentTimeMillis();
-		long currentDuration = currentTime;
+		long currentDuration = 0;
 		while (currentDuration < this.getJnlpConnTimeoutMillis() && computer.getChannel() != null) {
 			Thread.sleep(2000);
 			currentDuration = System.currentTimeMillis() - currentTime;
 		}
-		try {	
-			setHost(computer.getHostName());					    
+		try {
+			setDetectedHost(computer);
 			listener.getLogger().println("setting SSH connection detected Host name : " + computer.getHostName());			
 		} catch (IOException e) {
 			listener.getLogger().println("Error getting host name from Channel even though its available " + getTimestamp());
@@ -900,8 +912,7 @@ public class SSHLauncher extends ComputerLauncher {
         // we might be called multiple times from multiple finally/catch block, 
         if (connection!=null) {
             connection.close();
-            connection = null;
-            host = "";
+            connection = null;           
             listener.getLogger().println(Messages.SSHLauncher_ConnectionClosed(getTimestamp()));
         }
     }
@@ -1399,7 +1410,7 @@ public class SSHLauncher extends ComputerLauncher {
             
             if (usingHeadLessJNLP) {
             	try {
-            		listener.getLogger().println("Terminate JNLP slave channel");	
+            		if (!slaveComputer.getChannel().isInClosed()) listener.getLogger().println("Terminate JNLP slave channel");            			
 					slaveComputer.getChannel().close();
 				} catch (IOException e) {
 					listener.getLogger().println("Unable to terminate JNLP slave channel");					
