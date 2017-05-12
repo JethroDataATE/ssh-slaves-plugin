@@ -188,7 +188,10 @@ public class SSHLauncher extends ComputerLauncher {
     private String detectedHost = "1.1.1.1";
     
 	public String getDetectedHost() {
-		return detectedHost;
+		if (host.isEmpty() || host.trim().isEmpty()) {
+			return detectedHost;
+		}
+		return host;
 	}
 
 	private void setDetectedHost(final SlaveComputer computer) throws IOException, InterruptedException {		
@@ -829,7 +832,7 @@ public class SSHLauncher extends ComputerLauncher {
 			throw new InterruptedException();
 		} 
 		
-        connection = new Connection(host, port);
+        connection = new Connection(getDetectedHost(), port);
         ExecutorService executorService = Executors.newSingleThreadExecutor(
                 new NamingThreadFactory(Executors.defaultThreadFactory(), "SSHLauncher.launch for '" + computer.getName() + "' node"));
         Set<Callable<Boolean>> callables = new HashSet<Callable<Boolean>>();
@@ -890,17 +893,17 @@ public class SSHLauncher extends ComputerLauncher {
             }
             if (!res) {
                 System.out.println(Messages.SSHLauncher_LaunchFailedDuration(getTimestamp(),
-                        nodeName, host, duration));
+                        nodeName, getDetectedHost(), duration));
                 listener.getLogger().println(getTimestamp() + " Launch failed - cleaning up connection");
                 cleanupConnection(listener);
             } else {
                 System.out.println(Messages.SSHLauncher_LaunchCompletedDuration(getTimestamp(),
-                        nodeName, host, duration));
+                        nodeName, getDetectedHost(), duration));
             }
             executorService.shutdown();
         } catch (InterruptedException e) {
             System.out.println(Messages.SSHLauncher_LaunchFailed(getTimestamp(),
-                    nodeName, host));
+                    nodeName, getDetectedHost()));
         }
 
     }
@@ -1319,7 +1322,7 @@ public class SSHLauncher extends ComputerLauncher {
 
     protected void openConnection(final TaskListener listener, final SlaveComputer computer) throws IOException, InterruptedException {
         PrintStream logger = listener.getLogger();
-        logger.println(Messages.SSHLauncher_OpeningSSHConnection(getTimestamp(), host + ":" + port));
+        logger.println(Messages.SSHLauncher_OpeningSSHConnection(getTimestamp(), getDetectedHost() + ":" + port));
         connection.setTCPNoDelay(true);
 
         int maxNumRetries = this.maxNumRetries == null || this.maxNumRetries < 0 ? 0 : this.maxNumRetries;
