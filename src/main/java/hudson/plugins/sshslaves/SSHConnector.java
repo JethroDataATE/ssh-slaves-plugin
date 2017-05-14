@@ -194,16 +194,6 @@ public class SSHConnector extends ComputerConnector {
         return credentialsId;
     }
 
-    /**
-     * @see SSHLauncher#SSHLauncher(String, int, String, String, String, String, String, Integer, Integer, Integer)
-     */
-    @Deprecated
-    public SSHConnector(int port, String credentialsId, String jvmOptions, String javaPath,
-                        String prefixStartSlaveCmd, String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer jnlpConnTimeoutSeconds,
-                        Integer maxNumRetries, Integer retryWaitTime) {
-        this(port, SSHLauncher.lookupSystemCredentials(credentialsId), null, null, null, jvmOptions, javaPath, null,
-             prefixStartSlaveCmd, suffixStartSlaveCmd, launchTimeoutSeconds, jnlpConnTimeoutSeconds, maxNumRetries);
-    }
     
     @DataBoundConstructor
     public SSHConnector(int port, String credentialsId, String jvmOptions, String javaPath,
@@ -213,25 +203,6 @@ public class SSHConnector extends ComputerConnector {
              prefixStartSlaveCmd, suffixStartSlaveCmd, launchTimeoutSeconds, jnlpConnTimeoutSeconds, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy, disableSlavejarCopy, disableSlaveStartBySsh);
     }
 
-    /**
-     * @see SSHLauncher#SSHLauncher(String, int, String, String, String, String, String, Integer)
-     */
-    @Deprecated
-    public SSHConnector(int port, String credentialsId, String jvmOptions, String javaPath,
-                        String prefixStartSlaveCmd, String suffixStartSlaveCmd, Integer launchTimeoutSeconds) {
-        this(port, SSHLauncher.lookupSystemCredentials(credentialsId), null, null, null, jvmOptions, javaPath, null,
-                prefixStartSlaveCmd, suffixStartSlaveCmd, launchTimeoutSeconds, null, null);
-    }
-
-    /**
-     * @deprecated Use {@link SSHConnector#SSHConnector(int,String,String,String,String,String,Integer)}
-     */
-    @Deprecated
-    public SSHConnector(int port, String credentialsId, String jvmOptions, String javaPath,
-                        String prefixStartSlaveCmd, String suffixStartSlaveCmd) {
-        this(port, SSHLauncher.lookupSystemCredentials(credentialsId), null, null, null, jvmOptions, javaPath, null,
-                prefixStartSlaveCmd, suffixStartSlaveCmd, null, null, null);
-    }
 
     /**
      * @see SSHLauncher#SSHLauncher(String, int, StandardUsernameCredentials, String, String, String, String)
@@ -271,18 +242,6 @@ public class SSHConnector extends ComputerConnector {
                         String prefixStartSlaveCmd, String suffixStartSlaveCmd) {
         this(port, credentials, username, password, privatekey, jvmOptions, javaPath, jdkInstaller, prefixStartSlaveCmd,
                 suffixStartSlaveCmd, null, null, null, null, null, false, false);
-    }
-    /**
-     * @see SSHLauncher#SSHLauncher(String, int, StandardUsernameCredentials, String, String, JDKInstaller, String,
-     * String)
-     */
-    @Deprecated
-    public SSHConnector(int port, StandardUsernameCredentials credentials, String username, String password,
-                        String privatekey, String jvmOptions, String javaPath, JDKInstaller jdkInstaller,
-                        String prefixStartSlaveCmd, String suffixStartSlaveCmd, Integer launchTimeoutSeconds,
-                        Integer maxNumRetries, Integer retryWaitTime) {
-        this(port, credentials, username, password, privatekey, jvmOptions, javaPath, jdkInstaller, prefixStartSlaveCmd,
-                suffixStartSlaveCmd);
     }
         
     /**
