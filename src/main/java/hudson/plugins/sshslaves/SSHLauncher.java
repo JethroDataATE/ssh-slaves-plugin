@@ -52,6 +52,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.EnvVars;
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.model.Hudson;
@@ -137,6 +138,8 @@ import hudson.security.AccessControlled;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import static java.util.logging.Level.*;
+
+import hudson.remoting.Channel.Listener;
 import hudson.remoting.Launcher;
 
 /**
@@ -196,8 +199,10 @@ public class SSHLauncher extends ComputerLauncher {
 
 	private void setDetectedHost(final SlaveComputer computer) throws IOException, InterruptedException {		
 		if (computer.getHostName() != null) {
-			this.detectedHost = computer.getHostName();
-		}	
+			FilePath root = new FilePath(computer.getChannel(),computer.getNode().getRemoteFS());
+	        new FilePath(root, "IP"); 
+	        this.detectedHost = (new FilePath(root, "IP")).readToString(); 
+		}       
 	}
 
 	/**
@@ -831,7 +836,12 @@ public class SSHLauncher extends ComputerLauncher {
 			listener.getLogger().println("Error getting host name from Channel even though its available " + getTimestamp());
 			throw new InterruptedException();
 		} 
-		
+/*		try {
+			listener.getLogger().println("Env vars " + getTimestamp() + computer.getEnvironment());
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}*/
         connection = new Connection(getDetectedHost(), port);
         ExecutorService executorService = Executors.newSingleThreadExecutor(
                 new NamingThreadFactory(Executors.defaultThreadFactory(), "SSHLauncher.launch for '" + computer.getName() + "' node"));
@@ -1472,6 +1482,7 @@ public class SSHLauncher extends ComputerLauncher {
                 }
             }
             PluginImpl.unregister(connection);
+            listener.getLogger().println(getTimestamp() + "SSH connection was un-registered " + connection.getHostname());
             cleanupConnection(listener);            
         }
     }

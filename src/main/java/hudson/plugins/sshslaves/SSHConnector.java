@@ -71,6 +71,11 @@ public class SSHConnector extends ComputerConnector {
     public final int port;
 
     /**
+     * Field host
+     */
+    public final String host;
+    
+    /**
      * The id of the credentials to use.
      */
     private String credentialsId;
@@ -250,11 +255,11 @@ public class SSHConnector extends ComputerConnector {
      * @see SSHLauncher#SSHLauncher(String, int, StandardUsernameCredentials, String, String, JDKInstaller, String,
      * String)
      */
-    public SSHConnector(int port, StandardUsernameCredentials credentials, String username, String password,
-                        String privatekey, String jvmOptions, String javaPath, JDKInstaller jdkInstaller,
+    public SSHConnector(int port, StandardUsernameCredentials credentials, String username, String password, String privatekey, String jvmOptions, String javaPath, JDKInstaller jdkInstaller,
                         String prefixStartSlaveCmd, String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer jnlpConnTimeoutSeconds,
                         Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy, boolean disableSlavejarCopy, boolean disableSlaveStartBySsh) {
-        this.jvmOptions = jvmOptions;
+        this.host = null;
+    	this.jvmOptions = jvmOptions;
         this.port = port == 0 ? 22 : port;
         this.credentials = credentials;
         this.credentialsId = credentials == null ? null : this.credentials.getId();
