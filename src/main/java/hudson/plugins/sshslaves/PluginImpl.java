@@ -24,6 +24,7 @@
 package hudson.plugins.sshslaves;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,6 +44,11 @@ public class PluginImpl extends Plugin {
      */
     private static final List<Connection> activeConnections = new ArrayList<Connection>();
 
+    /**
+     * The connections to node name managment list.
+     */
+    private static final LinkedHashMap<String, Connection> activeNodeToConnectionMap = new LinkedHashMap<String, Connection>();
+    
     /**
      * {@inheritDoc}
      */
@@ -79,10 +85,11 @@ public class PluginImpl extends Plugin {
      *
      * @param connection The connection.
      */
-    public static synchronized void register(Connection connection) {
+    public static synchronized void register(Connection connection, String nodeName) {
         if (!activeConnections.contains(connection)) {
             activeConnections.add(connection);
         }
+        activeNodeToConnectionMap.put(nodeName.trim(), connection);
     }
 
     /**
@@ -90,10 +97,19 @@ public class PluginImpl extends Plugin {
      *
      * @param connection The connection.
      */
-    public static synchronized void unregister(Connection connection) {
+    public static synchronized void unregister(Connection connection, String nodeName) {
         activeConnections.remove(connection);
+        activeNodeToConnectionMap.remove(nodeName);
     }
 
+    /**
+     * Unregisters a connection for cleanup when the plugin is stopped.
+     *
+     * @param connection The connection.
+     */
+    public static synchronized LinkedHashMap<String, Connection> getNodeToConnectionMap() {
+        return activeNodeToConnectionMap;
+    }
     /**
      * The logger for this class.
      */

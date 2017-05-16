@@ -329,10 +329,9 @@ public class SSHLauncher extends ComputerLauncher {
      */
     @DataBoundConstructor
     public SSHLauncher(String host, int port, String credentialsId,
-             String jvmOptions, String javaPath, String prefixStartSlaveCmd, String suffixStartSlaveCmd,
-             Integer launchTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy, boolean disableSlavejarCopy, boolean disableSlaveStartBySsh) {
+             String jvmOptions, String javaPath, String prefixStartSlaveCmd, String suffixStartSlaveCmd, Integer launchTimeoutSeconds, Integer jnlpConnTimeoutSeconds, Integer maxNumRetries, Integer retryWaitTime, SshHostKeyVerificationStrategy sshHostKeyVerificationStrategy, boolean disableSlavejarCopy, boolean disableSlaveStartBySsh) {
         this(host, port, lookupSystemCredentials(credentialsId), jvmOptions, javaPath, null, prefixStartSlaveCmd,
-             suffixStartSlaveCmd, launchTimeoutSeconds, 0, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy, disableSlavejarCopy, disableSlaveStartBySsh);
+             suffixStartSlaveCmd, launchTimeoutSeconds, jnlpConnTimeoutSeconds, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy, disableSlavejarCopy, disableSlaveStartBySsh);
     }
 
 /*    *//**
@@ -825,13 +824,16 @@ public class SSHLauncher extends ComputerLauncher {
     public synchronized void launch(final SlaveComputer computer, final TaskListener listener) throws InterruptedException { 
 		long currentTime = System.currentTimeMillis();
 		long currentDuration = 0;
-		while (currentDuration < this.getJnlpConnTimeoutMillis() && computer.getChannel() != null) {
+		listener.getLogger().println(getTimestamp() + "enter wait for channel loop for  : " + getJnlpConnTimeoutMillis() + "ms");
+		while ((currentDuration < getJnlpConnTimeoutMillis()) && (computer.getAbsoluteRemoteFs() == null)) {
 			Thread.sleep(2000);
 			currentDuration = System.currentTimeMillis() - currentTime;
+			//listener.getLogger().println(getTimestamp() + "check channel");
 		}
+		listener.getLogger().println(getTimestamp() + "found channel or time out passed ");
 		try {
 			setDetectedHost(computer);
-			listener.getLogger().println("setting SSH connection detected Host name : " + computer.getHostName());			
+			listener.getLogger().println(getTimestamp() + " setting SSH connection detected Host name : " + getDetectedHost());			
 		} catch (IOException e) {
 			listener.getLogger().println("Error getting host name from Channel even though its available " + getTimestamp());
 			throw new InterruptedException();
@@ -868,8 +870,8 @@ public class SSHLauncher extends ComputerLauncher {
                     if (!getDisableSlaveStartBySsh()) {
                     	startSlave(computer, listener, java, workingDirectory);
                     }
-                    PluginImpl.register(connection);
-                    listener.getLogger().println("SSH connection was added to registered list :" + computer.getHostName());
+                    PluginImpl.register(connection, computer.getName());
+                    listener.getLogger().println(getTimestamp() + "SSH connection was added to registered list :" + computer.getHostName());
                     rval = Boolean.TRUE;                    
                 } catch (RuntimeException e) {
                     e.printStackTrace(listener.error(Messages.SSHLauncher_UnexpectedError()));
@@ -1481,7 +1483,7 @@ public class SSHLauncher extends ComputerLauncher {
                     }
                 }
             }
-            PluginImpl.unregister(connection);
+            PluginImpl.unregister(connection, n.getNodeName());
             listener.getLogger().println(getTimestamp() + "SSH connection was un-registered " + connection.getHostname());
             cleanupConnection(listener);            
         }
