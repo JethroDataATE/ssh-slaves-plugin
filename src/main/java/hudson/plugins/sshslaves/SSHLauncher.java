@@ -188,7 +188,7 @@ public class SSHLauncher extends ComputerLauncher {
     /**
      * Field host
      */
-    private String detectedHost = "1.1.1.1";
+    private String detectedHost = null;
     
 	public String getDetectedHost() {
 		if (host.isEmpty() || host.trim().isEmpty()) {
