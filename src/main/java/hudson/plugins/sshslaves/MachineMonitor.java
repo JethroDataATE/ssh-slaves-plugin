@@ -96,10 +96,15 @@ public class MachineMonitor extends AsyncPeriodicWork {
     		return false;
     	}  
     	try {
-    		LOGGER.info(getTimestamp() +"starting ping:  " + checkedcomputer.getNode().getNodeName());
-    		LOGGER.info(getTimestamp() +"ping with parameters:  " + checkedcomputer.getNode().getNodeName() + " connection : " + PluginImpl.getNodeToConnectionMap().get(checkedcomputer.getNode().getNodeName().trim()));
-    		
-    		ping(PluginImpl.getNodeToConnectionMap().get(checkedcomputer.getNode().getNodeName()));
+    		Connection slaveConnection = PluginImpl.getNodeToConnectionMap().get(checkedcomputer.getNode().getNodeName().trim());
+    		if (slaveConnection != null) {
+        		LOGGER.info(getTimestamp() +"starting ping:  " + checkedcomputer.getNode().getNodeName());
+        		LOGGER.info(getTimestamp() +"ping with parameters:  " + checkedcomputer.getNode().getNodeName() + " connection : " + slaveConnection);
+        		
+        		ping(slaveConnection);	
+    		} else {
+    			throw new IOException("No Connection record was found for machine");
+    		}
 		} catch (IOException e) {
 			e.printStackTrace();
 			return false;

@@ -824,6 +824,7 @@ public class SSHLauncher extends ComputerLauncher {
     public synchronized void launch(final SlaveComputer computer, final TaskListener listener) throws InterruptedException { 
 		long currentTime = System.currentTimeMillis();
 		long currentDuration = 0;
+		PluginImpl.unregister(connection, computer.getNode().getNodeName().trim());
 		listener.getLogger().println(getTimestamp() + "enter wait for channel loop for  : " + getJnlpConnTimeoutMillis() + "ms");
 		while ((currentDuration < getJnlpConnTimeoutMillis()) && (computer.getAbsoluteRemoteFs() == null)) {
 			Thread.sleep(2000);
@@ -870,7 +871,7 @@ public class SSHLauncher extends ComputerLauncher {
                     if (!getDisableSlaveStartBySsh()) {
                     	startSlave(computer, listener, java, workingDirectory);
                     }
-                    PluginImpl.register(connection, computer.getName());
+                    PluginImpl.register(connection, computer.getNode().getNodeName().trim());
                     listener.getLogger().println(getTimestamp() + "SSH connection was added to registered list :" + computer.getHostName());
                     rval = Boolean.TRUE;                    
                 } catch (RuntimeException e) {
