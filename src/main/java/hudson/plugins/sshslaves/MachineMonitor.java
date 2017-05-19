@@ -71,6 +71,7 @@ public class MachineMonitor extends AsyncPeriodicWork {
                     		checkedcomputer.getChannel().terminate(new IOException());                    		
                     	}
                         LOGGER.info("Slave Disonnection is done: " + checkedcomputer.getNode().getNodeName());
+                        PluginImpl.getNodeToConnectionMap().remove(checkedcomputer.getNode().getNodeName().trim());
                     }
                 } catch (Exception e) {
                     LOGGER.info("Slave is dead and failed to terminate: " + checkedcomputer.getNode().getNodeName() + " message: " + e.getMessage());
