@@ -83,16 +83,16 @@ public class MachineMonitor extends AsyncPeriodicWork {
        
     private boolean isAlive(SlaveComputer checkedcomputer) {
     	
-    	LOGGER.info("Enter SSH slave monitor is isAlive: " + checkedcomputer.getNode().getNodeName());    		
+    	//LOGGER.info("Enter SSH slave monitor is isAlive: " + checkedcomputer.getNode().getNodeName());    		
   
     	if (checkedcomputer.getChannel() == null) {
-    		LOGGER.info(getTimestamp() +"Slave Channel is closed:  " + checkedcomputer.getNode().getNodeName());
+    		//LOGGER.info(getTimestamp() +"Slave Channel is closed:  " + checkedcomputer.getNode().getNodeName());
     		return false;
     	}  
     	try {
     		Connection slaveConnection = PluginImpl.getNodeToConnectionMap().get(checkedcomputer.getNode().getNodeName().trim());
     		if (slaveConnection != null) {
-        		LOGGER.info(getTimestamp() +"starting ping:  " + checkedcomputer.getNode().getNodeName());
+        		//LOGGER.info(getTimestamp() +"starting ping:  " + checkedcomputer.getNode().getNodeName());
         		LOGGER.info(getTimestamp() +"ping with parameters:  " + checkedcomputer.getNode().getNodeName() + " connection : " + slaveConnection);
         		
         		ping(slaveConnection);	
