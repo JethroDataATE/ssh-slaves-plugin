@@ -71,7 +71,7 @@ public class MachineMonitor extends AsyncPeriodicWork {
                     		checkedcomputer.getChannel().terminate(new IOException());                    		
                     	}
                         LOGGER.info("Slave Disonnection is done: " + checkedcomputer.getNode().getNodeName());
-                        PluginImpl.getNodeToConnectionMap().remove(checkedcomputer.getNode().getNodeName().trim());
+                        PluginImpl.removeNodeToConnectionMap(checkedcomputer.getNode().getNodeName().trim());
                     }
                 } catch (Exception e) {
                     LOGGER.info("Slave is dead and failed to terminate: " + checkedcomputer.getNode().getNodeName() + " message: " + e.getMessage());
@@ -106,9 +106,8 @@ public class MachineMonitor extends AsyncPeriodicWork {
 		} catch (InterruptedException e) {		
 			e.printStackTrace();
 			return false;
-		}
-    	
-    	LOGGER.info("Slave " + checkedcomputer.getNode().getNodeName() + "was last heard at " + checkedcomputer.getChannel().getLastHeard());
+		}    	
+    	LOGGER.info("Slave " + checkedcomputer.getNode().getNodeName() + " was last heard at " + checkedcomputer.getChannel().getLastHeard());
 		return true;
     	
     }
@@ -133,7 +132,7 @@ public class MachineMonitor extends AsyncPeriodicWork {
 
         
         String ipAddress = connection.getHostname();
-        LOGGER.info("got host name: " + ipAddress);
+        //LOGGER.info("got host name: " + ipAddress);
         long remaining;
         do {
             remaining = end-System.currentTimeMillis();

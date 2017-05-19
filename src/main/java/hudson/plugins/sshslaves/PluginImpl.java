@@ -103,12 +103,21 @@ public class PluginImpl extends Plugin {
     }
 
     /**
-     * Unregisters a connection for cleanup when the plugin is stopped.
+     * get a connection to Node mapping.
      *
      * @param connection The connection.
      */
     public static synchronized LinkedHashMap<String, Connection> getNodeToConnectionMap() {
         return activeNodeToConnectionMap;
+    }
+    
+    /**
+     * Unregisters a connection mapping.
+     *
+     * @param connection The connection.
+     */
+    public static synchronized void removeNodeToConnectionMap(String nodeName) {
+    	activeNodeToConnectionMap.remove(nodeName);
     }
     /**
      * The logger for this class.
