@@ -84,13 +84,7 @@ public class MachineMonitor extends AsyncPeriodicWork {
     private boolean isAlive(SlaveComputer checkedcomputer) {
     	
     	LOGGER.info("Enter SSH slave monitor is isAlive: " + checkedcomputer.getNode().getNodeName());    		
-/*		try {
-			//Connection connection = new Connection(checkedcomputer.getHostName(), port);
-			
-		} catch (IOException e) {				
-		} catch (InterruptedException e) {			
-			e.printStackTrace();
-		}*/    
+  
     	if (checkedcomputer.getChannel() == null) {
     		LOGGER.info(getTimestamp() +"Slave Channel is closed:  " + checkedcomputer.getNode().getNodeName());
     		return false;
@@ -112,9 +106,6 @@ public class MachineMonitor extends AsyncPeriodicWork {
 			e.printStackTrace();
 			return false;
 		}
-		//do not disconnect machine
-		//checkedcomputer.tryReconnect();
-		//checkedcomputer.getChannel().getLastHeard();   		    		
     	
     	LOGGER.info("Slave " + checkedcomputer.getNode().getNodeName() + "was last heard at " + checkedcomputer.getChannel().getLastHeard());
 		return true;
@@ -161,28 +152,6 @@ public class MachineMonitor extends AsyncPeriodicWork {
     }
 
 
-/*    private static final class Ping implements Callable<Void, IOException> {
-        private static final long serialVersionUID = 1L;
-        int pingTimeOutSecMilliSec;
-
-        public Void call() throws IOException {
-            String ipAddress = "173.194.32.38";
-            InetAddress inet = InetAddress.getByName(ipAddress);
-            System.out.println("Sending Ping Request to " + ipAddress);
-            if (inet.isReachable(pingTimeOutSecMilliSec)) {
-            	return null;
-            } else {
-            	throw new IOException("ping failed");
-            }
-			
-        }
-
-		@Override
-		public void checkRoles(RoleChecker checker) throws SecurityException {
-			// TODO Auto-generated method stub
-			
-		}
-    }*/
     
     /**
      * Gets the formatted current time stamp.
