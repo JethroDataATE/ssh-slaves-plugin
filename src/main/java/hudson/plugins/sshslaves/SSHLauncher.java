@@ -824,7 +824,8 @@ public class SSHLauncher extends ComputerLauncher {
     public synchronized void launch(final SlaveComputer computer, final TaskListener listener) throws InterruptedException { 
 		long currentTime = System.currentTimeMillis();
 		long currentDuration = 0;
-		PluginImpl.unregister(connection, computer.getNode().getNodeName().trim());
+		// reset connection mapping hashmap K,V
+		PluginImpl.removeNodeToConnectionMap(computer.getNode().getNodeName().trim());
 		listener.getLogger().println(getTimestamp() + "enter wait for channel loop for  : " + getJnlpConnTimeoutMillis() + "ms");
 		while ((currentDuration < getJnlpConnTimeoutMillis()) && (computer.getAbsoluteRemoteFs() == null)) {
 			Thread.sleep(2000);

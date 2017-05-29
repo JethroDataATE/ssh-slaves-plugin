@@ -1,6 +1,7 @@
 package hudson.plugins.sshslaves;
 
 import hudson.Extension;
+import hudson.FilePath;
 import hudson.model.AsyncPeriodicWork;
 import hudson.model.Computer;
 import hudson.model.TaskListener;
@@ -63,7 +64,7 @@ public class MachineMonitor extends AsyncPeriodicWork {
             if (computer instanceof SlaveComputer && !computer.isOffline()) {
                 final SlaveComputer checkedcomputer = (SlaveComputer) computer;
                 try {
-                    if (!isAlive(checkedcomputer)) {
+                    if (!isAlive(checkedcomputer) && !remoteIPfileExist(checkedcomputer)) {
                         LOGGER.info("Slave is dead: " + checkedcomputer.getNode().getNodeName());
                         //checkedcomputer.terminate();
                         disconnectNode(checkedcomputer);
@@ -86,10 +87,12 @@ public class MachineMonitor extends AsyncPeriodicWork {
     	
     	//LOGGER.info("Enter SSH slave monitor is isAlive: " + checkedcomputer.getNode().getNodeName());    		
   
+    	// if we got here the slave is online so mostly will have a channel, more over ping test is stronger
     	if (checkedcomputer.getChannel() == null) {
-    		//LOGGER.info(getTimestamp() +"Slave Channel is closed:  " + checkedcomputer.getNode().getNodeName());
+    		LOGGER.info(getTimestamp() +"Slave Channel is closed:  " + checkedcomputer.getNode().getNodeName());
     		return false;
-    	}  
+    	}  	
+    	
     	try {
     		Connection slaveConnection = PluginImpl.getNodeToConnectionMap().get(checkedcomputer.getNode().getNodeName().trim());
     		if (slaveConnection != null) {
@@ -138,8 +141,8 @@ public class MachineMonitor extends AsyncPeriodicWork {
             remaining = end-System.currentTimeMillis();
             try {                
                 InetAddress inet = InetAddress.getByName(ipAddress);
-                LOGGER.info("Sending Ping Request to " + ipAddress);
-                LOGGER.info("respone to ping: " + inet.isReachable(pingTimeOutSecMilliSec.intValue()));
+                LOGGER.info("Sending Ping Request to " + ipAddress.trim());
+                //LOGGER.info("respone to ping: " + inet.isReachable(pingTimeOutSecMilliSec.intValue()));
                 if (inet.isReachable(pingTimeOutSecMilliSec.intValue())) {
                 	return;	
                 } else {
@@ -152,6 +155,14 @@ public class MachineMonitor extends AsyncPeriodicWork {
     }
 
 
+	private boolean remoteIPfileExist(final SlaveComputer computer) throws IOException, InterruptedException {		
+		FilePath root = new FilePath(computer.getChannel(),computer.getNode().getRemoteFS());
+		try {
+			return new FilePath(root, "IP").exists();	
+		} catch(Exception e) {
+			return false;
+		}		       
+	}
     
     /**
      * Gets the formatted current time stamp.
