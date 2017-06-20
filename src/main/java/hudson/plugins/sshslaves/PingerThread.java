@@ -2,6 +2,7 @@ package hudson.plugins.sshslaves;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -9,6 +10,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import org.jenkinsci.remoting.RoleChecker;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
 import com.trilead.ssh2.Connection;
 
@@ -49,10 +52,10 @@ public class PingerThread implements Runnable {
                 }
             }
         } catch (IOException e) {
-            LOGGER.info(connection.getHostname() +" is closed. Terminating");        
+            LOGGER.info(getTimestamp() + connection.getHostname() +" is closed. Terminating");        
         } catch (InterruptedException e) {
             // use interruption as a way to terminate the ping thread.
-            LOGGER.info(connection.getHostname()+" is interrupted. Terminating");
+            LOGGER.info(getTimestamp() + connection.getHostname()+" is interrupted. Terminating");
         }
     }
   
@@ -81,8 +84,7 @@ public class PingerThread implements Runnable {
                 remaining = end-System.currentTimeMillis();
                 try {                
                     InetAddress inet = InetAddress.getByName(ipAddress);
-                    LOGGER.info("Sending Ping Request to " + ipAddress.trim());
-                    //LOGGER.info("respone to ping: " + inet.isReachable(pingTimeOutSecMilliSec.intValue()));
+                    LOGGER.info(getTimestamp() + "Sending Ping Request to " + ipAddress.trim());
                     if (inet.isReachable(pingTimeOutSecMilliSec.intValue())) {
                     	return true;	
                     } else {
@@ -90,7 +92,7 @@ public class PingerThread implements Runnable {
                     	//throw new IOException("Ping started on "+start+" hasn't completed at "+System.currentTimeMillis());
                     }
                 } catch (IOException e) {
-                    throw new IOException("Ping started on "+start+" hasn't completed at "+System.currentTimeMillis());
+                    throw new IOException(getTimestamp() + "Ping started on "+start+" hasn't completed at "+System.currentTimeMillis());
                 }
             } while(remaining>0 && trials <= maxNumRetries);
             return false;
@@ -102,4 +104,14 @@ public class PingerThread implements Runnable {
     }
 
     private static final Logger LOGGER = Logger.getLogger(MachineMonitor.class.getName());
+    
+    /**
+     * Gets the formatted current time stamp.
+     *
+     * @return the formatted current time stamp.
+     */
+    @Restricted(NoExternalUse.class)
+    public static String getTimestamp() {
+        return String.format("[%1$tD %1$tT]", new Date());
+    }
 }

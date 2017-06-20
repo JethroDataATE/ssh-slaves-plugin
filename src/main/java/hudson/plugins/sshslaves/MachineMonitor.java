@@ -75,26 +75,6 @@ public class MachineMonitor extends AsyncPeriodicWork {
     	
     	long start = System.currentTimeMillis();
     	long remaining = recurrencePeriodMilliSec;
-/*        for (Computer computer : Jenkins.getInstance().getComputers()) {        	
-            if (computer instanceof SlaveComputer && !computer.isOffline()) {
-                final SlaveComputer checkedcomputer = (SlaveComputer) computer;
-                try {
-                    if (!isAlive(checkedcomputer) && !remoteIPfileExist(checkedcomputer)) {
-                        LOGGER.info("Slave is dead: " + checkedcomputer.getNode().getNodeName());
-                        //checkedcomputer.terminate();
-                        disconnectNode(checkedcomputer);
-                    	if (checkedcomputer.getChannel() != null) {
-                    		checkedcomputer.getChannel().terminate(new IOException());                    		
-                    	}
-                        LOGGER.info("Slave Disonnection is done: " + checkedcomputer.getNode().getNodeName());
-                        PluginImpl.removeNodeToConnectionMap(checkedcomputer.getNode().getNodeName().trim());
-                    }
-                } catch (Exception e) {
-                    LOGGER.info("Slave is dead and failed to terminate: " + checkedcomputer.getNode().getNodeName() + " message: " + e.getMessage());
-                    
-                }
-            }
-        }*/
     	
 		do {
 			remaining = remaining - (System.currentTimeMillis() - start);
@@ -162,58 +142,6 @@ public class MachineMonitor extends AsyncPeriodicWork {
      	
     }
     
-    /*	try {
-		result = (Boolean) f.get(Math.max(1,pingTimeOutSecMilliSec * maxNumRetries),TimeUnit.MILLISECONDS);
-	} catch (InterruptedException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	} catch (ExecutionException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	} catch (TimeoutException e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-	}*/
-    
-/*    private boolean isAlive(SlaveComputer checkedcomputer) {
-    	
-    	//LOGGER.info("Enter SSH slave monitor is isAlive: " + checkedcomputer.getNode().getNodeName());    		
-  
-    	// if we got here the slave is online so mostly will have a channel, more over ping test is stronger
-    	if (checkedcomputer.getChannel() == null) {
-    		LOGGER.info(getTimestamp() +"Slave Channel is closed:  " + checkedcomputer.getNode().getNodeName());
-    		return false;
-    	}  	
-    	
-    	try {
-    		Connection slaveConnection = PluginImpl.getNodeToConnectionMap().get(checkedcomputer.getNode().getNodeName().trim());
-    		if (slaveConnection != null) {
-        		//LOGGER.info(getTimestamp() +"starting ping:  " + checkedcomputer.getNode().getNodeName());
-        		LOGGER.info(getTimestamp() +"ping with parameters:  " + checkedcomputer.getNode().getNodeName() + " connection : " + slaveConnection);
-        		
-        		//ping(slaveConnection);
-        		Boolean result = null;
-				java.util.concurrent.Future<Boolean> f = executor.submit(new PingerThread(slaveConnection, pingTimeOutSecMilliSec, recurrencePeriodMilliSec, maxNumRetries), result);
-	            try {	                
-	            	result = f.get(Math.max(1,pingTimeOutSecMilliSec * maxNumRetries),TimeUnit.MILLISECONDS);
-	            } catch (ExecutionException e) {
-	            	LOGGER.info(getTimestamp() +"ping execution error to:" + checkedcomputer.getNode().getNodeName());
-	               return false;
-	            } catch (InterruptedException e) {
-	            	return false;					
-				} catch (TimeoutException e) {
-					LOGGER.info(getTimestamp() +"ping timed Out to:" + checkedcomputer.getNode().getNodeName());
-					return false;
-				}
-	            LOGGER.info("Slave " + checkedcomputer.getNode().getNodeName() + " was last heard at " + checkedcomputer.getChannel().getLastHeard());
-	            return result;
-    		} else {
-    			throw new IOException("No Connection record was found for machine");
-    		}
-		} catch (IOException e) {			
-			return false;
-		}
-    }*/
     
     private void disconnectNode(SlaveComputer checkedSlave) {
         try {
@@ -230,32 +158,6 @@ public class MachineMonitor extends AsyncPeriodicWork {
     
     public int port = 22; 
     
-/*    private void ping(Connection connection) throws IOException, InterruptedException {        
-        long start = System.currentTimeMillis();
-        long end = start + recurrencePeriodMilliSec - pingTimeOutSecMilliSec;
-
-        
-        String ipAddress = connection.getHostname();
-        //LOGGER.info("got host name: " + ipAddress);
-        long remaining;
-        do {
-            remaining = end-System.currentTimeMillis();
-            try {                
-                InetAddress inet = InetAddress.getByName(ipAddress);
-                LOGGER.info("Sending Ping Request to " + ipAddress.trim());
-                //LOGGER.info("respone to ping: " + inet.isReachable(pingTimeOutSecMilliSec.intValue()));
-                if (inet.isReachable(pingTimeOutSecMilliSec.intValue())) {
-                	return;	
-                } else {
-                	throw new IOException("Ping started on "+start+" hasn't completed at "+System.currentTimeMillis());
-                }
-            } catch (IOException e) {
-                throw new IOException("Ping started on "+start+" hasn't completed at "+System.currentTimeMillis());
-            }
-        } while(remaining>0);
-    }*/
-
-
 	private boolean remoteIPfileExist(final SlaveComputer computer) throws IOException, InterruptedException {	
 		if (computer.getChannel().isInClosed() || computer.getChannel().isOutClosed()) return false;
 		FilePath root = new FilePath(computer.getChannel(),computer.getNode().getRemoteFS());
