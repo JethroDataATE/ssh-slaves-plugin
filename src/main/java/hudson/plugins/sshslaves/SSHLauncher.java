@@ -1406,8 +1406,8 @@ public class SSHLauncher extends ComputerLauncher {
      * {@inheritDoc}
      */
     @Override
-    public synchronized void afterDisconnect(SlaveComputer slaveComputer, final TaskListener listener) {
-        if (connection != null) {
+    public synchronized void afterDisconnect(SlaveComputer slaveComputer, final TaskListener listener) {    	
+    	if (connection != null) {
             boolean connectionLost = reportTransportLoss(connection, listener);
             boolean usingHeadLessJNLP = getDisableSlaveStartBySsh();
             if (session!=null) {

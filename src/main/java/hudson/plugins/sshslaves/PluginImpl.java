@@ -99,7 +99,8 @@ public class PluginImpl extends Plugin {
      */
     public static synchronized void unregister(Connection connection, String nodeName) {
         activeConnections.remove(connection);
-        activeNodeToConnectionMap.remove(nodeName);
+        // workaround for slave on demand disconnect issue
+        //activeNodeToConnectionMap.remove(nodeName);
     }
 
     /**
