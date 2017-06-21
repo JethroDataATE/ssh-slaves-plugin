@@ -56,10 +56,10 @@ public class MachineMonitor extends AsyncPeriodicWork {
 
 	public MachineMonitor() {
         super("SSH alive slaves monitor");
-        recurrencePeriodMilliSec = Long.getLong("jenkins.slaves.checkAlivePeriodMilliSec", 10000);
-        pingTimeOutSecMilliSec = Long.getLong("jenkins.slaves.pingTimeOutMilliSec", 3000);
+        recurrencePeriodMilliSec = Long.getLong("jenkins.slaves.checkAlivePeriodMilliSec", 20000);
+        pingTimeOutSecMilliSec = Long.getLong("jenkins.slaves.pingTimeOutMilliSec", 10000);
         maxNumRetries = Integer.getInteger("jenkins.slaves.maxNumRetries", 2);
-        LOGGER.log(Level.FINE, "check alive period is {0}ms", recurrencePeriodMilliSec);
+        LOGGER.log(Level.FINE, getTimestamp() + " check alive period is {0}ms", recurrencePeriodMilliSec);
     }
 
     @Override
@@ -82,33 +82,35 @@ public class MachineMonitor extends AsyncPeriodicWork {
 				if (currentComputer instanceof SlaveComputer && !currentComputer.isOffline()) {
 					Boolean isSlaveAlive = null;
 					final SlaveComputer checkedcomputer = (SlaveComputer) currentComputer;	
-					LOGGER.info("handling Slave: " + checkedcomputer.getNode().getNodeName());
+					//LOGGER.info("handling Slave: " + checkedcomputer.getNode().getNodeName());
 					java.util.concurrent.Future<?> pingTask = pingProccesedList.get(checkedcomputer.getNode().getNodeName().trim());
 					if (!pingTask.isDone()) {
-						LOGGER.info(getTimestamp() +"Wait for ping task for :  " + checkedcomputer.getNode().getNodeName().trim() + " will finish within : " + remaining/pingProccesedList.size() + "milli");
+						//LOGGER.info(getTimestamp() +"Wait for ping task for :  " + checkedcomputer.getNode().getNodeName().trim() + " will finish within : " + );
 						isSlaveAlive = waitToGetResult(pingTask, remaining/pingProccesedList.size());
-						LOGGER.info(getTimestamp() +"result for ping to "  + checkedcomputer.getNode().getNodeName().trim() + " is: "+ isSlaveAlive);
+						LOGGER.info(getTimestamp() +" result for ping to "  + checkedcomputer.getNode().getNodeName().trim() + " is: "+ isSlaveAlive + "  waited for: " + remaining/pingProccesedList.size() + "milli");
 						if (isSlaveAlive == null) continue;
 					}
 					// if ping task is done and there is a result of true or false we can determine whether terminating this slave
                     if (!isSlaveAlive/* && !remoteIPfileExist(checkedcomputer)*/) {
-                        LOGGER.info("Slave is dead: " + checkedcomputer.getNode().getNodeName());
+                       // LOGGER.info(getTimestamp() + "Slave is dead: " + checkedcomputer.getNode().getNodeName());
                         //checkedcomputer.terminate();
                         disconnectNode(checkedcomputer);
                     	if (checkedcomputer.getChannel() != null) {
                     		checkedcomputer.getChannel().terminate(new IOException());                    		
                     	}
-                        LOGGER.info("Slave Disonnection is done: " + checkedcomputer.getNode().getNodeName());
+                        LOGGER.info(getTimestamp() + " Slave Disonnection is done: " + checkedcomputer.getNode().getNodeName());
                         PluginImpl.removeNodeToConnectionMap(checkedcomputer.getNode().getNodeName().trim());
                     } else {
-                    	LOGGER.info("Slave " + checkedcomputer.getNode().getNodeName() + "is Alive : " + isSlaveAlive + " or remote workspace exist : " + remoteIPfileExist(checkedcomputer));
+                    	LOGGER.info(getTimestamp() + " Slave " + checkedcomputer.getNode().getNodeName() + "is Alive : " + isSlaveAlive + " or remote workspace exist : " + remoteIPfileExist(checkedcomputer));
+                    	// remove ping request task if successful
+                    	pingProccesedList.remove(checkedcomputer.getNode().getNodeName().trim());
                     }
 				}
 			}
     	} while (remaining > 0);
 		
 		// clean previous node to ping tasks hash map
-		pingProccesedList.clear();
+		//pingProccesedList.clear();
     }
 
       
@@ -131,11 +133,11 @@ public class MachineMonitor extends AsyncPeriodicWork {
 	    		Connection slaveConnection = PluginImpl.getNodeToConnectionMap().get(computer.getNode().getNodeName().trim());
 	    		if (slaveConnection != null) {
 	        		//LOGGER.info(getTimestamp() +"starting ping:  " + checkedcomputer.getNode().getNodeName());
-	        		LOGGER.info(getTimestamp() +"submit task of ping with parameters:  " + computer.getNode().getNodeName() + " connection : " + slaveConnection);  
+	        		LOGGER.info(getTimestamp() +" submit task of ping with parameters:  " + computer.getNode().getNodeName() + " connection : " + slaveConnection.getHostname());  
 					//java.util.concurrent.Future<?> f = executor.submit(new PingerThread(slaveConnection, pingTimeOutSecMilliSec, recurrencePeriodMilliSec, maxNumRetries));
 					java.util.concurrent.Future<?> f = executor.submit(new Ping(recurrencePeriodMilliSec, pingTimeOutSecMilliSec, slaveConnection, maxNumRetries));
 					pingProccesedList.put(computer.getNode().getNodeName().trim(), f);
-					LOGGER.info(getTimestamp() +"ping task submitted and added to list ");
+					//LOGGER.info(getTimestamp() +"ping task submitted and added to list ");
 	    		}
     		}
     	}
@@ -148,7 +150,7 @@ public class MachineMonitor extends AsyncPeriodicWork {
         	checkedSlave.getChannel().close();        	
         	checkedSlave.disconnect(OfflineCause.create(Messages._ConnectionActivityMonitor_OfflineCause()));
         } catch (IOException e) {
-            LOGGER.log(Level.WARNING, "Failed to disconnect Channel of Node: " + checkedSlave.getNode().getNodeName());
+            LOGGER.log(Level.WARNING, getTimestamp() + "Failed to disconnect Channel of Node: " + checkedSlave.getNode().getNodeName());
         }
     }
 
