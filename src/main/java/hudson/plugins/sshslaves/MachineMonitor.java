@@ -84,11 +84,23 @@ public class MachineMonitor extends AsyncPeriodicWork {
 					final SlaveComputer checkedcomputer = (SlaveComputer) currentComputer;	
 					//LOGGER.info("handling Slave: " + checkedcomputer.getNode().getNodeName());
 					java.util.concurrent.Future<?> pingTask = pingProccesedList.get(checkedcomputer.getNode().getNodeName().trim());
+					if (pingTask == null) continue;
 					if (!pingTask.isDone()) {
 						//LOGGER.info(getTimestamp() +"Wait for ping task for :  " + checkedcomputer.getNode().getNodeName().trim() + " will finish within : " + );
 						isSlaveAlive = waitToGetResult(pingTask, remaining/pingProccesedList.size());
 						LOGGER.info(getTimestamp() +" result for ping to "  + checkedcomputer.getNode().getNodeName().trim() + " is: "+ isSlaveAlive + "  waited for: " + remaining/pingProccesedList.size() + "milli");
 						if (isSlaveAlive == null) continue;
+					} else {
+						try {
+							try {
+								isSlaveAlive = (Boolean) pingTask.get(100, TimeUnit.MILLISECONDS);
+								LOGGER.info(getTimestamp() +" result for Completed ping task to "  + checkedcomputer.getNode().getNodeName().trim() + " is: "+ isSlaveAlive + "  waited for: " + remaining/pingProccesedList.size() + "milli");
+							} catch (TimeoutException e) {
+								LOGGER.info(getTimestamp() + " could not get ping result timeout though task completed " + checkedcomputer.getNode().getNodeName());
+							}
+						} catch (ExecutionException e) {						
+							isSlaveAlive = false;
+						}
 					}
 					// if ping task is done and there is a result of true or false we can determine whether terminating this slave
                     if (!isSlaveAlive/* && !remoteIPfileExist(checkedcomputer)*/) {
@@ -100,6 +112,7 @@ public class MachineMonitor extends AsyncPeriodicWork {
                     	}
                         LOGGER.info(getTimestamp() + " Slave Disonnection is done: " + checkedcomputer.getNode().getNodeName());
                         PluginImpl.removeNodeToConnectionMap(checkedcomputer.getNode().getNodeName().trim());
+                        pingProccesedList.remove(checkedcomputer.getNode().getNodeName().trim());
                     } else {
                     	LOGGER.info(getTimestamp() + " Slave " + checkedcomputer.getNode().getNodeName() + "is Alive : " + isSlaveAlive + " or remote workspace exist : " + remoteIPfileExist(checkedcomputer));
                     	// remove ping request task if successful
