@@ -4,9 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.Date;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import org.jenkinsci.remoting.RoleChecker;

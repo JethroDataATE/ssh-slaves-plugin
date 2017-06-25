@@ -6,23 +6,14 @@ import hudson.model.AsyncPeriodicWork;
 import hudson.model.Computer;
 import hudson.model.TaskListener;
 import hudson.plugins.sshslaves.PingerThread.Ping;
-import hudson.remoting.Callable;
-import hudson.remoting.Channel;
-import hudson.remoting.Future;
-import hudson.remoting.RequestAbortedException;
 import hudson.slaves.Messages;
 import hudson.slaves.OfflineCause;
 import hudson.slaves.SlaveComputer;
 import hudson.util.TimeUnit2;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
 import java.io.IOException;
-import java.net.InetAddress;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,7 +22,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 

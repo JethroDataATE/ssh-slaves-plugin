@@ -24,7 +24,6 @@
 package hudson.plugins.sshslaves;
 
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHAuthenticator;
-import com.cloudbees.jenkins.plugins.sshcredentials.SSHUser;
 import com.cloudbees.jenkins.plugins.sshcredentials.SSHUserPrivateKey;
 import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey;
 import com.cloudbees.plugins.credentials.Credentials;
@@ -138,9 +137,6 @@ import hudson.security.AccessControlled;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import static java.util.logging.Level.*;
-
-import hudson.remoting.Channel.Listener;
-import hudson.remoting.Launcher;
 
 /**
  * A computer launcher that tries to start a linux slave by opening an SSH connection and trying to find java.
