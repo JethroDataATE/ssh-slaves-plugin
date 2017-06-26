@@ -50,8 +50,12 @@ public class MachineMonitor extends AsyncPeriodicWork {
         pingTimeOutSecMilliSec = Long.getLong("jenkins.slaves.pingTimeOutMilliSec", 10000);
         maxNumRetries = Integer.getInteger("jenkins.slaves.maxNumRetries", 2);
         LOGGER.log(Level.FINE, getTimestamp() + " check alive period is {0}ms", recurrencePeriodMilliSec);
+        
     }
 
+    // disabled by default 
+    public boolean enabled = Boolean.getBoolean(MachineMonitor.class.getName()+".enabled");
+    
     @Override
     public long getRecurrencePeriod() {          
          return enabled ? (recurrencePeriodMilliSec > 10000 ? recurrencePeriodMilliSec : 20000) : TimeUnit2.DAYS.toMillis(30);
@@ -157,10 +161,7 @@ public class MachineMonitor extends AsyncPeriodicWork {
         }
     }
 
-
-    // disabled by default 
-    public boolean enabled = Boolean.getBoolean(MachineMonitor.class.getName()+".enabled");
-    
+  
     public int port = 22; 
     
 	private boolean remoteIPfileExist(final SlaveComputer computer) throws IOException, InterruptedException {	

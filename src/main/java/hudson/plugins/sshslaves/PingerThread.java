@@ -7,7 +7,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -93,11 +92,8 @@ public class PingerThread implements Runnable {
                     throw new IOException(getTimestamp() + "Ping started on "+start+" hasn't completed at "+System.currentTimeMillis());
                 }
             } while(remaining>0 && trials <= maxNumRetries);
+            LOGGER.info(getTimestamp() + "Ping retries and remaining time ended to " + ipAddress.trim());
             return false;
-        }
-
-        public void checkRoles(RoleChecker checker) throws SecurityException {
-            // this callable is literally no-op, can't get any safer than that
         }
     }
 
