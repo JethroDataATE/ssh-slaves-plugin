@@ -24,6 +24,7 @@
 package hudson.plugins.sshslaves.verifiers;
 
 import static org.junit.Assert.assertEquals;
+
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -56,12 +57,15 @@ import com.cloudbees.plugins.credentials.domains.Domain;
 import com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
+import hudson.model.Job;
 import hudson.model.Node.Mode;
 import hudson.plugins.sshslaves.SSHLauncher;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.RetentionStrategy;
 import hudson.slaves.SlaveComputer;
+import jenkins.model.Jenkins.*;
+
 
 public class TrustHostKeyActionTest {
     
@@ -69,7 +73,7 @@ public class TrustHostKeyActionTest {
     public final TemporaryFolder temporaryFolder = new TemporaryFolder();
     
     @Rule
-    public final JenkinsRule jenkins = new JenkinsRule();
+    //public final JenkinsRule jenkins = new JenkinsRule();
 
     private static int findPort() throws IOException {
         ServerSocket socket = new ServerSocket();;
@@ -81,6 +85,10 @@ public class TrustHostKeyActionTest {
         }
     }
     
+    
+    jenkins.model.item.getAllJobs();
+    
+	private static List<T> mosh = jenkins.model.Jenkins.getAllItems(); 
     @SuppressWarnings("unchecked")
     @Test
     public void testSubmitNotAuthorised() throws Exception {

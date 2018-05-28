@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>ssh-slaves</artifactId>
-  <version>1.21-Mosh</version>
+  <version>1.26-Mosh</version>
   <packaging>hpi</packaging>
 
   <name>Jenkins SSH Slaves plugin</name>
@@ -20,7 +20,11 @@
     <java.level>6</java.level>
     <jenkins-test-harness.version>2.18</jenkins-test-harness.version>
   </properties>
-
+<!--   <properties>
+    <jenkins.version>2.73</jenkins.version>
+    <java.level>6</java.level>
+    <jenkins-test-harness.version>2.18</jenkins-test-harness.version>
+  </properties> -->
   <developers>
     <developer>
       <id>stephenconnolly</id>
