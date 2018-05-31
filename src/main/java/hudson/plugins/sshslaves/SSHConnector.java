@@ -281,7 +281,7 @@ public class SSHConnector extends ComputerConnector {
 
     @Override
     public SSHLauncher launch(String host, TaskListener listener) throws IOException, InterruptedException {
-        return new SSHLauncher(host, port, getCredentials(), jvmOptions, javaPath, jdkInstaller, prefixStartSlaveCmd,
+        return new SSHLauncher(host, port, getCredentials().getId(), jvmOptions, javaPath, jdkInstaller, prefixStartSlaveCmd,
                 suffixStartSlaveCmd, launchTimeoutSeconds, jnlpConnTimeoutSeconds, maxNumRetries, retryWaitTime, sshHostKeyVerificationStrategy, disableSlavejarCopy, disableSlaveStartBySsh);
     }
     
@@ -334,7 +334,7 @@ public class SSHConnector extends ComputerConnector {
             if (StringUtils.isBlank(value)) return FormValidation.ok();
             try {
                 if (Integer.parseInt(value.trim()) < 0) {
-                    return FormValidation.error(Messages.SSHConnector_LaunchTimeoutMustBePostive());
+                    return FormValidation.error(Messages.SSHConnector_LaunchTimeoutMustBePositive());
                 }
                 return FormValidation.ok();
             } catch (NumberFormatException e) {

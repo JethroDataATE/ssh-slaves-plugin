@@ -82,7 +82,7 @@ public class VerificationStrategyConfigurationTest {
         credentialsList.add(credentials);
         SystemCredentialsProvider.getInstance().getDomainCredentialsMap().put(Domain.global(), credentialsList);
         
-        SSHConnector connector = new SSHConnector(12, credentials, null, null, null, "", "xyz", null, "", "", 30, 1, 1, null, strategy);
+        SSHConnector connector = new SSHConnector(12, credentials, null, null, null, "", "xyz", null, "", "", 30, 1, 1, null, strategy, false, false);
         
         SSHConnector output = jenkins.configRoundtrip(connector);
 
